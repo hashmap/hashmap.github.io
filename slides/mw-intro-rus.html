@@ -1,0 +1,344 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Как рабоатет Mimblewimble</title>
+
+		<link rel="stylesheet" href="css/reset.css">
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/white.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/monokai.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+		 <script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async>
+		 </script>
+		</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+							<section>
+					<h2>Как работает Mimblewimble</h2>
+					<p>@hashmap</p>
+					<p>16 мая, Москва</p>
+				</section>
+				
+				<section>
+					<h2>Вводная</h2>
+					<p  class="fragment">Я не криптограф</p>
+					<p  class="fragment">Но это не важно</p>
+					<p  class="fragment">Начальных знаний алгебры достаточно</p>
+					<p  class="fragment">За одним исключением, но это не важно для понимания</p>
+				</section>
+				
+				<section>
+					<h2>Зачем?</h2>
+					<p  class="fragment">А если спросят</p>
+					<p  class="fragment">Суперключ</p>
+					<p  class="fragment">Понимать риски и ограничения</p>
+					<p  class="fragment">Это весело</p>
+				</section>
+
+				<section>
+					<h3>План</h3>
+					<ul>
+						<li  class="fragment">Введение в эллиптические кривые <br/> Andrea Corbellini, <a href="https://andrea.corbellini.name/2015/05/17/elliptic-curve-cryptography-a-gentle-introduction/">https://andrea.corbellini.name/2015/05/17/elliptic-curve-cryptography-a-gentle-introduction/</a></li>
+						<li class="fragment">Mimblewimble <br/> Introduction to Mimblewimble and Grin, <a href="https://github.com/mimblewimble/grin/blob/master/doc/intro.md">https://github.com/mimblewimble/grin/blob/master/doc/intro.md</a></li>
+						<li class="fragment">Почти с нуля</li>
+						<li class="fragment">Без крайностей</li>
+					</ul>
+				</section>
+				
+				<section>
+					<h3>Избежать вот этого</h3>
+					<img src="res/owl.png">
+				</section>
+
+				<section> 
+				<h2>Эллиптические кривые</h2>
+				<div style="display:flex; flex-direction:row; justify-content:space-between">
+					<div>
+						Множество точек
+
+						$$y^2 = x^3 + ax + b$$
+
+						где
+						$$4a^3 + 27b^2 \ne 0$$
+					
+						и точка бесконечности 0
+					</div>
+					<div>
+						<img src="res/curves.png" />
+					</div>
+
+				  </div>
+				</section>
+				<section>
+				<h2>Абелева группа</h2>
+				<ul>
+					<li class="fragment">
+						Замыкание: \(\forall a \in \mathbb{G}, b \in \mathbb{G}\): \(a+b \in \mathbb{G}\) 
+					</li>
+					<li class="fragment">Ассоциативность: \((a+b)+c=a+(b+c)\)</li>
+					<li class="fragment">Наличие нейтрального элемента 0: \(\forall a: a+0=0+a=a\) </li>
+					<li class="fragment">Наличие обратного элемента: \(\forall a, \exists b: a+b=0 \)</li>
+					<li class="fragment">Коммутативность: \(  a+b=b+a \)</li>
+				</ul>
+				</section>
+				<section>
+					<h2>Операция сложения точек</h2>
+				<div style="display:flex; flex-direction:row; justify-content:space-between">
+					<div class="fragment">
+					<img src="res/three-aligned-points.png">
+					$$P+R+Q=0$$
+					</div>
+					<div class="fragment">
+						<img src="res/point-addition.png">
+						$$P+Q=-R$$
+					</div>
+					<div class="fragment">
+						<img src="res/animation-point-doubling.gif">
+						$$P+P$$
+					</div>
+				</div>
+				</section>
+				<section>
+					<h2>Умножение точки на скаляр (число)</h2>
+					<p class="fragment">
+						$$nP= P + P + P .. + P$$
+						\(O(n)\), более эффективный алгоритм \( O(\log n)\)
+					</p>
+				</section>
+				<section>
+					<h2>Логарифм</h2>
+					<p>
+						$$Q = nP$$
+						зная Q и P найти n
+					</p>
+				</section>
+				<section>
+					<h3>Поле \(\mathbb{F}_p\) основанное на кольце целых чисел</h3>
+					<p>
+					<ul>
+						<li class="fragment">Множество целых чисел от 0 до \(p-1\)</li>
+						<li class="fragment">Операции сложения и умножения (с обратным эелементом, те также вычитание и деление)</li>
+						<li class="fragment">p простое число</li>
+					</ul>
+					</p>
+				</section>
+				<section>
+					<h3>Пример \(\mathbb{F}_{23} \)</h3>
+					<p>
+					<ul>
+						<li class="fragment">Cложение: \((18 + 9) \bmod{23} = 4\)</li>
+						<li class="fragment">Вычитание: \((7 - 14) \bmod{23} = 16\)</li>
+						<li class="fragment">Умножение: \( 4 \cdot 7 \bmod{23} = 5 \)</li>
+						<li class="fragment">Обратный элемент для сложения: \( -5 \bmod{23} = 18 \)</li>
+						<li class="fragment">Обратный элемент для умножения: \( 9^{-1} \bmod{23} = 18 \)</li>
+					</ul>
+					</p>
+				</section>
+
+				<section>
+					<h3>Эллиптические кривые над \(\mathbb{F}_p\)</h3>
+					<p>
+					$$\begin{array}{rcl}
+  \left\{(x, y) \in (\mathbb{F}_p)^2 \right. & \left. | \right. & \left. y^2 \equiv x^3 + ax + b \pmod{p}, \right. \\
+  & & \left. 4a^3 + 27b^2 \not\equiv 0 \pmod{p}\right\}\ \cup\ \left\{0\right\}
+  \end{array}$$
+					</p>
+				</section>
+
+				<section>
+					<img src="res/elliptic-curves-mod-p.png">
+				</section>
+		
+				<section>
+					<h3>Дискретный логарифм</h3>
+						<p>	
+						\(Q = nP\)
+						зная \(Q\) и \(P\) найти \(n\).
+						</p>
+						<p class="fragment">
+						Нет алгоритма полиномиального времени, но это не точно.
+						</p>
+						<p class="fragment">"Сложнее" RSA, числа могут быть меньше (меньше битность).</p>
+				</section>
+
+				<section>
+					<h3>Теперь забываем, абстрагируемся</h3>
+					<ul>
+						<li class="fragment">Кривая \(C\)</li>
+						<li class="fragment">Сложение и вычитание точек  \(G + H \)</li>
+						<li class="fragment">Умножение точки на скаляр \(k \cdot H\)</li>
+						<li class="fragment">Коммутативность и ассоциативность \((k + j) \cdot H\ = k \cdot H + j \cdot H \)</li>
+						<li class="fragment">Дискретный логарифм сложный (умножение просто, деление невозможно)</li>
+					</ul>
+				</section>
+
+
+				<section>
+					<h3>Криптография на эллиптических кривых</h3>
+					<ul>
+						<li class="fragment">Закрытый ключ \(k\)</li>
+						<li class="fragment">Открытый ключ \(k \cdot H\)</li>
+						<li class="fragment">Открытй ключ суммы двух закрытых ключей равен сумме открытых ключей \((k + j) \cdot H\ = k \cdot H + j \cdot H \)</li>
+					</ul>
+				</section>
+				
+	
+				<section>
+					<h3>Свойства Mimblewimble</h3>
+					<p class="fragment">Верификация транзакций без раскрытия сумм (сумма outputs -  сумма inputs = 0)</p>
+					<p class="fragment">Доказательсво владения закрытым ключом (без явной подписи ключом)</p>
+				</section>
+
+				<section>
+					<h3>Скрываем сумму</h3>
+					<p class="fragment">Транзакция \( v_{i1} + v_{i2} = v_{o1}\)</p>
+					<p class="fragment">Первая попытка \( v_{i1} \cdot H + v_{i2} \cdot H = v_{o1} \cdot H\)</p>
+					<p class="fragment">Полный провал!</p>
+					<p class="fragment">Одним фломастером можно покрасить все, кроме самого фломастера</p>
+				</section>
+
+				<section>
+					<h3>Скрываем число \(v\)</h3>
+					<p class="fragment">Два фломастера!</p>
+					<p class="fragment">$$r \cdot G + v \cdot H$$</p>
+					<ul>
+						<li class="fragment">\(r\) - закрытый ключ, также blinding factor</li>
+						<li class="fragment">\(G, H \in C \)</li>
+						<li class="fragment">\(r \cdot G \) - открытый ключ для \(r\)</li>
+					</ul>
+					<p class="fragment">мы построили схему обязательсва Педерсена (Pedersen Commitment)</p>
+				</section>
+				
+				<section>
+					<h3>Вторая попытка</h3>
+					<p class="fragment">Транзакция \( v_{i1} + v_{i2} = v_{o1}\)</p>
+					<p class="fragment">\((r_{i1} \cdot G +  v_{i1} \cdot H) + (r_{i2} \cdot G + v_{i2} \cdot H) = 
+					(r_{o1} \cdot G + v_{o1} \cdot H) \)</p>
+					<p class="fragment">откуда \( r_{i1} + r_{i2} = r_{o1} \)</p>
+				</section>
+
+				<section>
+					<h3>Чего мы уже добились</h3>
+					<ul>
+					<li class="fragment">Первое свойство MW - проверка не требует раскрытия значений</li>
+					<li class="fragment">Возможно мы можем использовать введенные закрытые ключи для доказательства владения?</li>
+					</ul>
+				</section>
+				
+				<section>
+					<h3>Проверим!</h3>
+					<ul>
+					<li class="fragment">Alice шлет 3 монеты (\(v \)) Bob</li>
+					<li class="fragment">Bob выбирает blinding factor \(r\) 28</li>
+					<li class="fragment">В блокчейн записывается \(X = 28 \cdot G + 3 \cdot H \)</li>
+					<li class="fragment">Bob пересылает все  Carol (транзакция Y)
+					\( Y - X = 0 \cdot G + 0 \cdot H = \\
+					(28 \cdot G + 3 \cdot H) - (28 \cdot G + 3 \cdot H) \) </li>
+					<li class="fragment">Bob знает закрый ключ Carol, полный провал!</li>
+					</ul>
+				</section>
+				<section>
+					<h3>Выберем другой ключ</h3>
+					<ul>
+						<li class="fragment"> Carol выбирает закрытый ключ 113
+							<p class="fragment">\( Y - X = \\ 
+					(113 \cdot G + 3 \cdot H) - (28 \cdot G + 3 \cdot H) \\
+					= 85 \cdot G + 0 \cdot H \)</p>	
+						</li>
+						<li class="fragment">Избыточное значение (excess value) на \(G\) 85</li>
+						<li class="fragment">\(85 \cdot G \) - валидный открытй ключ при закрытом ключе 85</li>
+						<li class="fragment">\( x \cdot G + y \cdot H \) валидный открытый ключ только если \( y = 0\)</li>
+						
+					</ul>
+				</section>
+
+				<section>
+					<h3>Верификация</h3>
+					<ul>
+						<li class="fragment">\( Y - X\) - валидный открытй ключ на \(С\)</li>
+						<li class="fragment">Две стороны коллективно знают закрытый ключ (избыточное значение)</li>
+						<li class="fragment">Тогда \( y = 0 \Rightarrow \)  не создано новых монет</li>
+						<li class="fragment">Простейший способ доказать - подписать ключом 85</li>
+						<li class="fragment">Это ядро транзакции (transaction kernel)</li>
+					</ul>
+				</section>
+	
+				<section>
+					<h3>Отрицательные значения</h3>
+					<p class="fragment">
+					Добавляем range proof \( v \in (0..N)\), который также требует знания закрытых ключей<br>
+					<br>
+					Bulletproofs:  Short Proofs for Confidential Transactions and More <a href="https://eprint.iacr.org/2017/1066.pdf">https://eprint.iacr.org/2017/1066.pdf</a>
+					</p>
+				</section>
+
+
+				<section>
+					<h3>Транзакция MW</h3>
+					<ul>
+						<li class="fragment">Несколько inputs (outputs предыдущих транзакций)</li>
+						<li class="fragment">Outputs в форме \(r \cdot G + v \cdot H \) (Pedersen commitment) и range proof, r - новый закрытый ключ, v - номинал</li>
+						<li class="fragment">Комиссия в открытом виде</li>
+						<li class="fragment">Подпись пустого сообщения, где ключ разница между суммой всех outputs + комиссия  и inputs</>
+					</ul>
+				</section>
+
+
+	<section>
+					<h3>Легко видеть, что</h3>
+					<ul>
+						<li class="fragment">Блок - это транзакция</li>
+						<li class="fragment">Cut-through</li>
+						<li class="fragment">Состояние - количество монет, непотраченные outputs и все ядра транзакций</li>
+						<li class="fragment">World domination!</li>
+					</ul>
+				</section>
+
+
+			</div>
+		</div>
+
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				math: {
+		mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+		config: {
+  "HTML-CSS": {
+    preferredFont: "STIX",
+	  scale: 100,
+  }
+},  // See http://docs.mathjax.org/en/latest/config-files.html
+		// pass other options into `MathJax.Hub.Config()`
+	},
+	history: true,
+
+		dependencies: [ { src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true },
+				{ src: 'plugin/math/math.js', async: true }
+				]
+			});
+		</script>
+	</body>
+</html>
